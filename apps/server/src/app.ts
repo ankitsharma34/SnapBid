@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import { loggerMiddleware } from "./middlewares/logger.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 
 const app = express();
 
@@ -11,5 +12,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use(errorMiddleware);
+app.use(notFoundMiddleware);
 
 export default app;
