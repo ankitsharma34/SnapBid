@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { AppError } from "./app-error.js";
+import z from "zod";
 
 type AccessTokenPayload = {
   userId: string;
@@ -22,4 +24,19 @@ export const generateRefreshToken = (payload: RefreshTokenPayload) => {
     expiresIn: "7d",
   });
   return refreshToken;
+};
+
+const accessTokenPayloadSchema = z.object({
+  userId: z.string(),
+  role: z.enum(["USER", "ADMIN"]),
+});
+
+export const verifyAccessToken = (token: string) => {
+  try {
+    const payload = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+
+    return accessTokenPayloadSchema.parse(payload);
+  } catch {
+    throw new AppError("Invalid or expired access token", 401);
+  }
 };
