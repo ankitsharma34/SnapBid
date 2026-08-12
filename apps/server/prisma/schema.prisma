@@ -24,6 +24,7 @@ model User {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   refreshTokens   RefreshToken[]
+  auctions        Auction[]
 
   @@index([email])
   @@index([username])
@@ -38,4 +39,56 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+enum AuctionStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model Auction {
+  id            String         @id @default(cuid())
+  sellerId      String
+  seller        User           @relation(fields: [sellerId], references: [id])
+  title         String
+  description   String?
+  startingPrice Decimal
+  currentPrice  Decimal
+  bidIncrement  Decimal
+  startTime     DateTime
+  endTime       DateTime
+  status        AuctionStatus  @default(DRAFT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auctionImages AuctionImage[]
+  category      Category?      @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([startTime])
+  @@index([endTime])
+  @@index([status, endTime])
+}
+
+model AuctionImage {
+  id        String  @id @default(cuid())
+  auctionId String
+  url       String
+  position  Int     @default(0)
+  auction   Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  auctions Auction[]
 }
