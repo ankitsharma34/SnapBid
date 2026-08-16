@@ -1,6 +1,9 @@
 import { prisma } from "../../prisma/prisma.js";
 import { Auction, Prisma } from "../../../generated/prisma/client.js";
-import { CreateAuctionRepositoryInput } from "./auction.types.js";
+import {
+  CreateAuctionRepositoryInput,
+  UpdateAuctionRepositoryInput,
+} from "./auction.types.js";
 
 export const findAllAuctions = async () => {
   return prisma.auction.findMany({
@@ -57,6 +60,7 @@ export const findAuctionById = async (id: string) => {
 
       category: {
         select: {
+          id: true,
           name: true,
           slug: true,
         },
@@ -104,5 +108,50 @@ export const createAuction = async (
         })),
       },
     },
+  });
+};
+
+export const updateAuction = async ({
+  auctionId,
+  input,
+}: {
+  auctionId: string;
+  input: UpdateAuctionRepositoryInput;
+}) => {
+  return prisma.$transaction(async (tx) => {
+    const auction = await tx.auction.update({
+      where: {
+        id: auctionId,
+      },
+
+      data: {
+        title: input.title,
+        description: input.description,
+        startingPrice: new Prisma.Decimal(input.startingPrice),
+        currentPrice: new Prisma.Decimal(input.currentPrice),
+        bidIncrement: new Prisma.Decimal(input.bidIncrement),
+        startTime: input.startTime,
+        endTime: input.endTime,
+        categoryId: input.categoryId,
+      },
+    });
+
+    await tx.auctionImage.deleteMany({
+      where: {
+        auctionId,
+      },
+    });
+
+    if (input.auctionImages.length > 0) {
+      await tx.auctionImage.createMany({
+        data: input.auctionImages.map((url, index) => ({
+          auctionId,
+          url,
+          position: index,
+        })),
+      });
+    }
+
+    return auction;
   });
 };

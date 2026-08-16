@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   createAuctionService,
+  editAuctionService,
   getAuctionByIdService,
   getAuctionsService,
 } from "./auction.service.js";
@@ -38,5 +39,19 @@ export const postAuction = async (req: Request, res: Response) => {
     success: true,
     message: "Auction created successfully",
     data: { id: auctionId },
+  });
+};
+
+export const editAuction = async (req: Request, res: Response) => {
+  const { id } = auctionIdParamsSchema.parse(req.params);
+  const inputData = createAuctionSchema.parse(req.body);
+  const sellerId = req.user!.userId;
+
+  await editAuctionService({ auctionId: id, sellerId, inputData });
+
+  return res.status(200).json({
+    success: true,
+    message: "Auction edited successfully",
+    data: { id },
   });
 };
