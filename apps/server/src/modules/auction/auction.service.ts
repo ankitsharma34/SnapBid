@@ -6,6 +6,7 @@ import {
   findAuctionById,
   findCategoryIdBySlug,
   updateAuction,
+  updateAuctionStatus,
 } from "./auction.repository.js";
 import { CreateAuctionInput } from "@snapbid/shared";
 
@@ -121,4 +122,28 @@ export const editAuctionService = async ({
       auctionImages: inputData.auctionImages,
     },
   });
+};
+
+export const cancelAuctionService = async ({
+  auctionId,
+  sellerId,
+}: {
+  auctionId: string;
+  sellerId: string;
+}) => {
+  const auction = await findAuctionById(auctionId);
+
+  if (!auction) {
+    throw new AppError("Auction not found", 404);
+  }
+
+  if (auction.seller.id !== sellerId) {
+    throw new AppError("You can't cancel this auction", 403);
+  }
+
+  if (auction.status !== "SCHEDULED") {
+    throw new AppError("Only scheduled auctions can be cancelled", 403);
+  }
+
+  await updateAuctionStatus(auctionId, "CANCELLED");
 };

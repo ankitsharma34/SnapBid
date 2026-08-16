@@ -1,5 +1,5 @@
 import { prisma } from "../../prisma/prisma.js";
-import { Auction, Prisma } from "../../../generated/prisma/client.js";
+import { AuctionStatus, Prisma } from "../../../generated/prisma/client.js";
 import {
   CreateAuctionRepositoryInput,
   UpdateAuctionRepositoryInput,
@@ -153,5 +153,19 @@ export const updateAuction = async ({
     }
 
     return auction;
+  });
+};
+
+export const updateAuctionStatus = async (
+  auctionId: string,
+  status: AuctionStatus,
+) => {
+  return prisma.auction.update({
+    where: {
+      id: auctionId,
+    },
+    data: {
+      status: status,
+    },
   });
 };
