@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import {
+  createAuctionService,
   getAuctionByIdService,
   getAuctionsService,
 } from "./auction.service.js";
 import { auctionIdParamsSchema } from "./auction.schema.js";
+import { createAuctionSchema } from "@snapbid/shared";
 
 export const getAuctions = async (_req: Request, res: Response) => {
   const auctions = await getAuctionsService();
@@ -24,5 +26,17 @@ export const getAuctionById = async (req: Request, res: Response) => {
     success: true,
     message: "Auction fetched successfully",
     data: auction,
+  });
+};
+
+export const postAuction = async (req: Request, res: Response) => {
+  const inputData = createAuctionSchema.parse(req.body);
+  const sellerId = req.user!.userId;
+  const auctionId = await createAuctionService({ inputData, sellerId });
+
+  return res.status(201).json({
+    success: true,
+    message: "Auction created successfully",
+    data: { id: auctionId },
   });
 };
