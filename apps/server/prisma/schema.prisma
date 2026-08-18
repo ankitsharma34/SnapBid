@@ -25,6 +25,7 @@ model User {
   updatedAt       DateTime       @updatedAt
   refreshTokens   RefreshToken[]
   auctions        Auction[]
+  bids            Bid[]
 
   @@index([email])
   @@index([username])
@@ -66,6 +67,7 @@ model Auction {
   auctionImages AuctionImage[]
   category      Category?      @relation(fields: [categoryId], references: [id])
   categoryId    String?
+  bids          Bid[]
 
   @@index([sellerId])
   @@index([status])
@@ -91,4 +93,18 @@ model Category {
   createdAt DateTime @default(now())
 
   auctions Auction[]
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  auctionId String
+  bidderId  String
+  amount    Decimal
+  createdAt DateTime @default(now())
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  bidder    User     @relation(fields: [bidderId], references: [id])
+
+  @@index([auctionId, createdAt])
+  @@index([auctionId, amount])
+  @@index([bidderId])
 }
