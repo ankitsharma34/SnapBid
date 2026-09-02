@@ -92,3 +92,26 @@ export const placeBid = async ({
     },
   );
 };
+
+export const findBidHistoryByAuctionId = (auctionId: string) => {
+  return prisma.bid.findMany({
+    where: {
+      auctionId,
+    },
+    select: {
+      id: true,
+      amount: true,
+      createdAt: true,
+      bidder: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
