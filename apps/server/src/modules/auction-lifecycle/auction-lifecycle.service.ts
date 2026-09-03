@@ -1,7 +1,7 @@
 import { AppError } from "../../utils/app-error.js";
 import {
+  finalizeAuction,
   findAuctionForLifecycle,
-  markAuctionAsEnded,
   markAuctionAsLive,
 } from "./auction-lifecycle.repository.js";
 
@@ -65,12 +65,6 @@ export const endAuctionService = async (auctionId: string) => {
     throw new AppError("Auction end time has not been reached", 409);
   }
 
-  const ended = await markAuctionAsEnded(auctionId, now);
-
-  if (!ended) {
-    throw new AppError(
-      "Auction could not be ended because its state changed",
-      409,
-    );
-  }
+  // finalize the auction, e.g., mark as ended, determine the winner, etc.
+  await finalizeAuction(auctionId, now);
 };

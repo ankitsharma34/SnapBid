@@ -32,18 +32,28 @@ export const markAuctionAsLive = async (auctionId: string, now: Date) => {
   return result.count === 1;
 };
 
-export const markAuctionAsEnded = async (auctionId: string, now: Date) => {
-  const result = await prisma.auction.updateMany({
-    where: {
-      id: auctionId,
-      status: "LIVE",
-      endTime: {
-        lte: now,
+export const finalizeAuction = async (auctionId: string, now: Date) => {
+  return prisma.$transaction(async (tx) => {
+    const highestBid = await tx.bid.findFirst({
+      where: {
+        auctionId,
       },
-    },
-    data: {
-      status: "ENDED",
-    },
+      orderBy: [{ amount: "desc" }, { createdAt: "asc" }],
+    });
+
+    await tx.auction.updateMany({
+      where: {
+        id: auctionId,
+        status: "LIVE",
+        endTime: {
+          lte: now,
+        },
+      },
+      data: {
+        status: "ENDED",
+        winnerId: highestBid?.bidderId ?? null,
+        winningBidId: highestBid?.id ?? null,
+      },
+    });
   });
-  return result.count === 1;
 };
