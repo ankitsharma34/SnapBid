@@ -4,14 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/worker.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/worker.js",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
-    "tsx": "^4.23.5"
+    "dotenv": "^17.4.2",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "bullmq": "^6.3.4",
+    "ioredis": "^6.0.0",
+    "zod": "^4.4.3"
   }
 }
