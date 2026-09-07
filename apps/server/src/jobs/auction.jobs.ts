@@ -38,3 +38,42 @@ export const scheduleAuctionEnd = async ({
 
   return job;
 };
+
+export const scheduleAuctionStart = async ({
+  auctionId,
+  startTime,
+}: {
+  auctionId: string;
+  startTime: Date;
+}) => {
+  const delay = startTime.getTime() - Date.now();
+
+  if (delay <= 0) {
+    throw new Error("Auction start time must be in the future");
+  }
+
+  const job = await auctionQueue.add(
+    "START_AUCTION",
+    {
+      auctionId,
+    },
+    {
+      delay,
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 1000,
+      },
+
+      removeOnComplete: {
+        count: 100,
+      },
+
+      removeOnFail: {
+        count: 500,
+      },
+    },
+  );
+
+  return job;
+};
