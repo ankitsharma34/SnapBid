@@ -1,5 +1,6 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "../infrastructure/redis.js";
+import { endAuctionService, startAuctionService } from "@snapbid/auction";
 
 export const auctionWorker = new Worker(
   "auction",
@@ -9,11 +10,11 @@ export const auctionWorker = new Worker(
 
     switch (job.name) {
       case "START_AUCTION":
-        // await startAuction(auctionId);
+        await startAuctionService(auctionId);
         break;
 
       case "END_AUCTION":
-        // await endAuction(auctionId);
+        await endAuctionService(auctionId);
         break;
 
       default:

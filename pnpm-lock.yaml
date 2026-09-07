@@ -81,6 +81,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@snapbid/auction':
+        specifier: workspace:^
+        version: link:../../packages/auction
       bullmq:
         specifier: ^6.3.4
         version: 6.3.4(ioredis@6.0.0)(pg@8.22.0)(redis@6.2.0)
