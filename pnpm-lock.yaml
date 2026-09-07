@@ -32,9 +32,15 @@ importers:
       argon2:
         specifier: ^0.45.1
         version: 0.45.1
+      bullmq:
+        specifier: ^6.3.4
+        version: 6.3.4(ioredis@6.0.0)(pg@8.22.0)(redis@6.2.0)
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      ioredis:
+        specifier: ^6.0.0
+        version: 6.0.0
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -3174,7 +3180,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.50.0
       debug: 4.4.3
       minimatch: 9.0.5
-      semver: 7.7.3
+      semver: 7.8.5
       tinyglobby: 0.2.15
       ts-api-utils: 2.1.0(typescript@5.9.2)
       typescript: 5.9.2
