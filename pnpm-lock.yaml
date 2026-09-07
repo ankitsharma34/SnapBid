@@ -107,6 +107,12 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  packages/auction:
+    dependencies:
+      '@snapbid/database':
+        specifier: workspace:*
+        version: link:../database
+
   packages/database:
     dependencies:
       '@prisma/adapter-pg':

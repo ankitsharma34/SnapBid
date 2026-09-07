@@ -1,15 +1,15 @@
-import { AppError } from "../../utils/app-error.js";
+import { AuctionError } from "../errors/auction-error.js";
 import {
   finalizeAuction,
   findAuctionForLifecycle,
   markAuctionAsLive,
-} from "./auction-lifecycle.repository.js";
+} from "../repositories/auction-lifecycle.repository.js";
 
 export const startAuctionService = async (auctionId: string) => {
   const auction = await findAuctionForLifecycle(auctionId);
 
   if (!auction) {
-    throw new AppError("Auction not found", 404);
+    throw new AuctionError("Auction not found", "AUCTION_NOT_FOUND");
   }
 
   const now = new Date();
@@ -19,26 +19,32 @@ export const startAuctionService = async (auctionId: string) => {
   }
 
   if (auction.status !== "SCHEDULED") {
-    throw new AppError(
+    throw new AuctionError(
       `Auction cannot be started from ${auction.status} state`,
-      409,
+      "INVALID_AUCTION_STATE",
     );
   }
 
   if (auction.startTime > now) {
-    throw new AppError("Auction start time has not been reached", 409);
+    throw new AuctionError(
+      "Auction start time has not been reached",
+      "AUCTION_NOT_STARTED",
+    );
   }
 
   if (auction.endTime <= now) {
-    throw new AppError("Auction has already ended", 409);
+    throw new AuctionError(
+      "Auction has already ended",
+      "AUCTION_ALREADY_ENDED",
+    );
   }
 
   const started = await markAuctionAsLive(auctionId, now);
 
   if (!started) {
-    throw new AppError(
+    throw new AuctionError(
       "Auction could not be started because its state changed",
-      409,
+      "INVALID_AUCTION_STATE",
     );
   }
 };
@@ -46,7 +52,7 @@ export const startAuctionService = async (auctionId: string) => {
 export const endAuctionService = async (auctionId: string) => {
   const auction = await findAuctionForLifecycle(auctionId);
   if (!auction) {
-    throw new AppError("Auction not found", 404);
+    throw new AuctionError("Auction not found", "AUCTION_NOT_FOUND");
   }
   const now = new Date();
 
@@ -55,14 +61,17 @@ export const endAuctionService = async (auctionId: string) => {
   }
 
   if (auction.status !== "LIVE") {
-    throw new AppError(
+    throw new AuctionError(
       `Auction cannot be ended from ${auction.status} state`,
-      409,
+      "INVALID_AUCTION_STATE",
     );
   }
 
   if (auction.endTime > now) {
-    throw new AppError("Auction end time has not been reached", 409);
+    throw new AuctionError(
+      "Auction end time has not been reached",
+      "INVALID_AUCTION_TIME",
+    );
   }
 
   // finalize the auction, e.g., mark as ended, determine the winner, etc.
