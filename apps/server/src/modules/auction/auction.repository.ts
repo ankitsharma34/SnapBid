@@ -1,5 +1,5 @@
-import { prisma } from "../../prisma/prisma.js";
-import { AuctionStatus, Prisma } from "../../../generated/prisma/client.js";
+import { prisma } from "@snapbid/database";
+import { AuctionStatus, Prisma } from "@snapbid/database";
 import {
   CreateAuctionRepositoryInput,
   UpdateAuctionRepositoryInput,

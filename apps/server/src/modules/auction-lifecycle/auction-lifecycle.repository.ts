@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/prisma.js";
+import { prisma } from "@snapbid/database";
 
 export const findAuctionForLifecycle = async (auctionId: string) => {
   return prisma.auction.findUnique({

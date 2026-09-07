@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/prisma.js";
+import { prisma } from "@snapbid/database";
 import { redis } from "../../redis/redis.js";
 
 export const healthCheck = async () => {

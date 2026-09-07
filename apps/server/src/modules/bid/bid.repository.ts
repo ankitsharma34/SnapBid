@@ -1,5 +1,5 @@
-import { Prisma } from "../../../generated/prisma/client.js";
-import { prisma } from "../../prisma/prisma.js";
+import { Prisma } from "@snapbid/database";
+import { prisma } from "@snapbid/database";
 import { AppError } from "../../utils/app-error.js";
 
 export const placeBid = async ({

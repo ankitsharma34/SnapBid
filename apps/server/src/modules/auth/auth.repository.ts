@@ -1,5 +1,5 @@
 import { registerDto } from "@snapbid/shared";
-import { prisma } from "../../prisma/prisma.js";
+import { prisma } from "@snapbid/database";
 
 export const findUserByUsername = async (username: string) => {
   const user = await prisma.user.findUnique({
