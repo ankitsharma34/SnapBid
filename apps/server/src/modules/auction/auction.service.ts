@@ -1,3 +1,7 @@
+import {
+  scheduleAuctionEnd,
+  scheduleAuctionStart,
+} from "../../jobs/auction.jobs.js";
 import { AppError } from "../../utils/app-error.js";
 import { toAuctionResponse, toAuctionsListResponse } from "./auction.mapper.js";
 import {
@@ -57,6 +61,20 @@ export const createAuctionService = async ({
   };
 
   const createdAuction = await createAuction(newAuctionInput);
+
+  // BullMQ service
+  if (status === "SCHEDULED") {
+    await scheduleAuctionStart({
+      auctionId: createdAuction.id,
+      startTime: createdAuction.startTime,
+    });
+  }
+
+  await scheduleAuctionEnd({
+    auctionId: createdAuction.id,
+    endTime: createdAuction.endTime,
+  });
+
   return createdAuction.id;
 };
 
