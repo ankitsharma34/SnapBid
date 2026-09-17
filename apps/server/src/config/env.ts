@@ -7,6 +7,7 @@ const envSchema = z.object({
   REDIS_URL: z.url(),
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
+  CLIENT_URL: z.url(),
 });
 
 const parsed = envSchema.safeParse(process.env);
