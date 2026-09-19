@@ -1,35 +1,17 @@
 import type { Server as HttpServer } from "node:http";
-import { Server, type Socket } from "socket.io";
+import { Server } from "socket.io";
 import { logger } from "../config/logger.js";
 import { verifyAccessToken } from "../utils/jwt.js";
-import { env } from "../config/env.js";
-
-type SocketUser = {
-  userId: string;
-  role: string;
-};
-
-type ServerToClientEvents = {
-  connected: (payload: { userId: string }) => void;
-};
-
-type ClientToServerEvents = {
-  "auction:join": (auctionId: string) => void;
-  "auction:leave": (auctionId: string) => void;
-};
-
-type InterServerEvents = Record<string, never>;
-
-type SocketData = {
-  user: SocketUser;
-};
-
-export type SnapBidSocket = Socket<
+import { registerAuctionSocketHandlers } from "./handlers/auction.socket.js";
+import { auctionRoom, userRoom } from "./socket.rooms.js";
+import type {
   ClientToServerEvents,
-  ServerToClientEvents,
   InterServerEvents,
-  SocketData
->;
+  ServerToClientEvents,
+  SnapBidSocket,
+  SocketData,
+} from "./socket.types.js";
+import { env } from "../config/env.js";
 
 let io: Server<
   ClientToServerEvents,
@@ -58,27 +40,59 @@ const getTokenFromSocket = (socket: SnapBidSocket) => {
   return token;
 };
 
-const auctionRoom = (auctionId: string) => `auction:${auctionId}`;
-const userRoom = (userId: string) => `user:${userId}`;
+const authenticateSocket = (
+  socket: SnapBidSocket,
+  next: (error?: Error) => void,
+) => {
+  const token = getTokenFromSocket(socket);
 
-const registerSocketHandlers = (socket: SnapBidSocket) => {
+  if (!token) {
+    next(new Error("Authentication required"));
+    return;
+  }
+
+  try {
+    const payload = verifyAccessToken(token);
+
+    socket.data.user = {
+      userId: payload.userId,
+      role: payload.role,
+    };
+
+    next();
+  } catch {
+    next(new Error("Invalid or expired access token"));
+  }
+};
+
+const registerSocketConnection = (socket: SnapBidSocket) => {
   const { userId } = socket.data.user;
 
   socket.join(userRoom(userId));
-  socket.emit("connected", { userId });
 
-  logger.info({ socketId: socket.id, userId }, "Socket connected");
-
-  socket.on("auction:join", (auctionId) => {
-    socket.join(auctionRoom(auctionId));
+  socket.emit("connected", {
+    userId,
   });
 
-  socket.on("auction:leave", (auctionId) => {
-    socket.leave(auctionRoom(auctionId));
-  });
+  registerAuctionSocketHandlers(socket);
+
+  logger.info(
+    {
+      socketId: socket.id,
+      userId,
+    },
+    "Socket connected",
+  );
 
   socket.on("disconnect", (reason) => {
-    logger.info({ socketId: socket.id, userId, reason }, "Socket disconnected");
+    logger.info(
+      {
+        socketId: socket.id,
+        userId,
+        reason,
+      },
+      "Socket disconnected",
+    );
   });
 };
 
@@ -95,26 +109,9 @@ export const initializeSocketServer = (httpServer: HttpServer) => {
     },
   });
 
-  io.use((socket: SnapBidSocket, next) => {
-    const token = getTokenFromSocket(socket);
-    if (!token) {
-      next(new Error("Authentication required"));
-      return;
-    }
+  io.use(authenticateSocket);
 
-    try {
-      const payload = verifyAccessToken(token);
-      socket.data.user = {
-        userId: payload.userId,
-        role: payload.role,
-      };
-      next();
-    } catch {
-      next(new Error("Invalid or expired access token"));
-    }
-  });
-
-  io.on("connection", registerSocketHandlers);
+  io.on("connection", registerSocketConnection);
 
   return io;
 };
