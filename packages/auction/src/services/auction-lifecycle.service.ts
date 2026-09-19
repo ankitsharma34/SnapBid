@@ -15,7 +15,11 @@ export const startAuctionService = async (auctionId: string) => {
   const now = new Date();
 
   if (auction.status === "LIVE") {
-    return; // Auction is already live, no action needed
+    return {
+      started: false,
+      alreadyLive: true,
+      startedAt: null,
+    };
   }
 
   if (auction.status !== "SCHEDULED") {
@@ -47,6 +51,12 @@ export const startAuctionService = async (auctionId: string) => {
       "INVALID_AUCTION_STATE",
     );
   }
+
+  return {
+    started: true,
+    alreadyLive: false,
+    startedAt: now,
+  };
 };
 
 export const endAuctionService = async (auctionId: string) => {
@@ -57,7 +67,13 @@ export const endAuctionService = async (auctionId: string) => {
   const now = new Date();
 
   if (auction.status === "ENDED") {
-    return; // Auction is already ended, no action needed
+    return {
+      ended: false,
+      alreadyEnded: true,
+      endedAt: null,
+      winner: null,
+    };
+    // Auction is already ended, no action needed
   }
 
   if (auction.status !== "LIVE") {
@@ -75,5 +91,12 @@ export const endAuctionService = async (auctionId: string) => {
   }
 
   // finalize the auction, e.g., mark as ended, determine the winner, etc.
-  await finalizeAuction(auctionId, now);
+  const result = await finalizeAuction(auctionId, now);
+
+  return {
+    ended: true,
+    alreadyEnded: false,
+    endedAt: now,
+    winner: result.winner,
+  };
 };

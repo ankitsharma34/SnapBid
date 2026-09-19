@@ -39,9 +39,14 @@ export const finalizeAuction = async (auctionId: string, now: Date) => {
         auctionId,
       },
       orderBy: [{ amount: "desc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        bidderId: true,
+        amount: true,
+      },
     });
 
-    await tx.auction.updateMany({
+    const updated = await tx.auction.updateMany({
       where: {
         id: auctionId,
         status: "LIVE",
@@ -55,5 +60,23 @@ export const finalizeAuction = async (auctionId: string, now: Date) => {
         winningBidId: highestBid?.id ?? null,
       },
     });
+
+    if (updated.count === 0) {
+      return {
+        ended: false,
+        winner: null,
+      };
+    }
+
+    return {
+      ended: true,
+      winner: highestBid
+        ? {
+            userId: highestBid.bidderId,
+            bidId: highestBid.id,
+            amount: highestBid.amount,
+          }
+        : null,
+    };
   });
 };
