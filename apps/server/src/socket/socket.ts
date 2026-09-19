@@ -12,6 +12,9 @@ import type {
   SocketData,
 } from "./socket.types.js";
 import { env } from "../config/env.js";
+import { initializeSocketEventSubscriber } from "../redis/redis.pubsub.js";
+import { broadcastSocketEvent } from "./socket.broadcaster.js";
+import { parseSocketEvent } from "./socket.event.parser.js";
 
 let io: Server<
   ClientToServerEvents,
@@ -114,6 +117,19 @@ export const initializeSocketServer = (httpServer: HttpServer) => {
   io.on("connection", registerSocketConnection);
 
   return io;
+};
+
+export const initializeSocketInfrastructure = async () => {
+  const messageHandler = async (message: string) => {
+    const event = parseSocketEvent(message);
+
+    broadcastSocketEvent(event);
+  };
+  await initializeSocketEventSubscriber(async (message) => {
+    messageHandler(message).catch((error) => {
+      logger.error({ error }, "Failed to handle socket event");
+    });
+  });
 };
 
 export const getSocketServer = () => {
