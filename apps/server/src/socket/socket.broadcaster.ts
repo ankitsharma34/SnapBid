@@ -24,5 +24,14 @@ export const broadcastSocketEvent = (event: SocketEvent) => {
 
       break;
     }
+
+    case "auction:bid": {
+      io.to(auctionRoom(event.payload.auctionId)).emit(
+        "auction:bid",
+        event.payload,
+      );
+
+      break;
+    }
   }
 };

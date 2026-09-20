@@ -16,6 +16,22 @@ export const postBidService = async ({
     inputAmount,
   });
 
+  await publishSocketEvent(
+    JSON.stringify({
+      event: "auction:bid",
+      payload: {
+        auctionId: auctionId,
+        bid: {
+          id: result.bid.id,
+          bidderId: result.bid.bidderId,
+          amount: result.bid.amount.toString(),
+          createdAt: result.bid.createdAt.toISOString(),
+        },
+        currentPrice: result.currentPrice.toString(),
+      },
+    }),
+  );
+
   return result.bid;
 };
 

@@ -22,6 +22,17 @@ export type AuctionEndedPayload = {
   endedAt: string;
 };
 
+export type AuctionBidPayload = {
+  auctionId: string;
+  bid: {
+    id: string;
+    bidderId: string;
+    amount: string;
+    createdAt: string;
+  };
+  currentPrice: string;
+};
+
 export type ServerToClientEvents = {
   connected: (payload: { userId: string }) => void;
   "auction:joined": (payload: { auctionId: string }) => void;
@@ -29,6 +40,7 @@ export type ServerToClientEvents = {
 
   "auction:started": (payload: AuctionStartedPayload) => void;
   "auction:ended": (payload: AuctionEndedPayload) => void;
+  "auction:bid": (payload: AuctionBidPayload) => void;
 
   "auction:error": (payload: { message: string }) => void;
 };
