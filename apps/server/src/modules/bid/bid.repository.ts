@@ -85,7 +85,7 @@ export const placeBid = async ({
         },
       });
 
-      return bid;
+      return { bid, currentPrice: amount };
     },
     {
       isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,

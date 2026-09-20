@@ -9,7 +9,7 @@ export const postBid = async (req: Request, res: Response) => {
 
   const bidderId = req.user!.userId;
 
-  const bidId = await postBidService({
+  const bid = await postBidService({
     auctionId: id,
     bidderId,
     inputAmount: amount,
@@ -18,7 +18,12 @@ export const postBid = async (req: Request, res: Response) => {
   return res.status(201).json({
     success: true,
     message: "Bid placed successfully",
-    data: { bidId },
+    data: {
+      bidId: bid.id,
+      bidderId: bid.bidderId,
+      amount: bid.amount.toString(),
+      createdAt: bid.createdAt.toISOString(),
+    },
   });
 };
 

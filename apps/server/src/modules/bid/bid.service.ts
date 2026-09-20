@@ -1,5 +1,4 @@
-import { Prisma } from "../../../generated/prisma/client.js";
-import { AppError } from "../../utils/app-error.js";
+import { publishSocketEvent } from "../../redis/redis.pubsub.js";
 import { findBidHistoryByAuctionId, placeBid } from "./bid.repository.js";
 
 export const postBidService = async ({
@@ -11,13 +10,13 @@ export const postBidService = async ({
   bidderId: string;
   inputAmount: string;
 }) => {
-  const bid = await placeBid({
+  const result = await placeBid({
     auctionId,
     bidderId,
     inputAmount,
   });
 
-  return bid.id;
+  return result.bid;
 };
 
 export const getBidHistoryService = async ({
