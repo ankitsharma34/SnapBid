@@ -93,6 +93,22 @@ export const endAuctionService = async (auctionId: string) => {
   // finalize the auction, e.g., mark as ended, determine the winner, etc.
   const result = await finalizeAuction(auctionId, now);
 
+  if (!result.ended) {
+    if (result.status === "ENDED") {
+      return {
+        ended: false,
+        alreadyEnded: true,
+        endedAt: null,
+        winner: null,
+      };
+    }
+
+    throw new AuctionError(
+      "Auction could not be ended because its state changed",
+      "INVALID_AUCTION_STATE",
+    );
+  }
+
   return {
     ended: true,
     alreadyEnded: false,
