@@ -31,6 +31,11 @@ export const registerSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   })
-  .transform(({ confirmPassword, ...data }) => data);
+  .transform((data) => ({
+    username: data.username,
+    email: data.email,
+    displayName: data.displayName,
+    password: data.password,
+  }));
 
 export type registerDto = z.infer<typeof registerSchema>;
