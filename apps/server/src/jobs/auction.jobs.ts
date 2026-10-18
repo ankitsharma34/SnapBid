@@ -1,5 +1,24 @@
 import { auctionQueue } from "../queues/auction.queue.js";
 
+export const auctionLifecycleJobIds = {
+  start: (auctionId: string) => `auction-start-${auctionId}`,
+  end: (auctionId: string) => `auction-end-${auctionId}`,
+};
+
+const lifecycleJobOptions = (jobId: string, delay: number) => ({
+  jobId,
+  delay,
+  attempts: 3,
+  backoff: {
+    type: "exponential" as const,
+    delay: 1000,
+  },
+  // Lifecycle job IDs are deterministic. Removing terminal jobs allows those
+  // IDs to be reused when a scheduled auction is edited and rescheduled.
+  removeOnComplete: true,
+  removeOnFail: true,
+});
+
 export const scheduleAuctionEnd = async ({
   auctionId,
   endTime,
@@ -19,19 +38,7 @@ export const scheduleAuctionEnd = async ({
       auctionId,
     },
     {
-      jobId: `auction-end-${auctionId}`,
-      delay,
-      attempts: 3,
-      backoff: {
-        type: "exponential",
-        delay: 1000,
-      },
-      removeOnComplete: {
-        count: 100,
-      },
-      removeOnFail: {
-        count: 500,
-      },
+      ...lifecycleJobOptions(auctionLifecycleJobIds.end(auctionId), delay),
     },
   );
 };
@@ -55,19 +62,39 @@ export const scheduleAuctionStart = async ({
       auctionId,
     },
     {
-      jobId: `auction-start-${auctionId}`,
-      delay,
-      attempts: 3,
-      backoff: {
-        type: "exponential",
-        delay: 1000,
-      },
-      removeOnComplete: {
-        count: 100,
-      },
-      removeOnFail: {
-        count: 500,
-      },
+      ...lifecycleJobOptions(auctionLifecycleJobIds.start(auctionId), delay),
     },
   );
+};
+
+const removeJobIfPresent = async (jobId: string) => {
+  const job = await auctionQueue.getJob(jobId);
+
+  if (job) {
+    await job.remove();
+  }
+};
+
+export const removeAuctionLifecycleJobs = async (auctionId: string) => {
+  await Promise.all([
+    removeJobIfPresent(auctionLifecycleJobIds.start(auctionId)),
+    removeJobIfPresent(auctionLifecycleJobIds.end(auctionId)),
+  ]);
+};
+
+export const replaceAuctionLifecycleJobs = async ({
+  auctionId,
+  startTime,
+  endTime,
+}: {
+  auctionId: string;
+  startTime: Date;
+  endTime: Date;
+}) => {
+  await removeAuctionLifecycleJobs(auctionId);
+
+  await Promise.all([
+    scheduleAuctionStart({ auctionId, startTime }),
+    scheduleAuctionEnd({ auctionId, endTime }),
+  ]);
 };

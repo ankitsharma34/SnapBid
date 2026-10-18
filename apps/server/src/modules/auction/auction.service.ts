@@ -1,7 +1,10 @@
 import {
+  removeAuctionLifecycleJobs,
+  replaceAuctionLifecycleJobs,
   scheduleAuctionEnd,
   scheduleAuctionStart,
 } from "../../jobs/auction.jobs.js";
+import { publishSocketEvent } from "../../redis/redis.pubsub.js";
 import { AppError } from "../../utils/app-error.js";
 import { toAuctionResponse, toAuctionsListResponse } from "./auction.mapper.js";
 import {
@@ -75,6 +78,19 @@ export const createAuctionService = async ({
     endTime: createdAuction.endTime,
   });
 
+  if (status === "LIVE") {
+    await publishSocketEvent(
+      JSON.stringify({
+        event: "auction:started",
+        payload: {
+          auctionId: createdAuction.id,
+          status: "LIVE",
+          startedAt: now.toISOString(),
+        },
+      }),
+    );
+  }
+
   return createdAuction.id;
 };
 
@@ -140,6 +156,12 @@ export const editAuctionService = async ({
       auctionImages: inputData.auctionImages,
     },
   });
+
+  await replaceAuctionLifecycleJobs({
+    auctionId,
+    startTime: inputData.startTime,
+    endTime: inputData.endTime,
+  });
 };
 
 export const cancelAuctionService = async ({
@@ -164,4 +186,5 @@ export const cancelAuctionService = async ({
   }
 
   await updateAuctionStatus(auctionId, "CANCELLED");
+  await removeAuctionLifecycleJobs(auctionId);
 };
