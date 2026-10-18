@@ -1,30 +1,65 @@
-import type {
-  SocketEvent,
-  SocketEventMap,
-  SocketEventName,
-} from "./socket.events.js";
+import { z } from "zod";
+import type { SocketEvent } from "./socket.events.js";
 
-const isSocketEventName = (value: unknown): value is SocketEventName => {
-  return value === "auction:started" || value === "auction:ended";
-};
+const identifierSchema = z.string().trim().min(1);
+const amountSchema = z.string().regex(/^\d+(\.\d+)?$/);
+const timestampSchema = z.iso.datetime({ offset: true });
+
+const socketEventSchema = z.discriminatedUnion("event", [
+  z
+    .object({
+      event: z.literal("auction:started"),
+      payload: z
+        .object({
+          auctionId: identifierSchema,
+          status: z.literal("LIVE"),
+          startedAt: timestampSchema,
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      event: z.literal("auction:ended"),
+      payload: z
+        .object({
+          auctionId: identifierSchema,
+          status: z.literal("ENDED"),
+          winner: z
+            .object({
+              userId: identifierSchema,
+              bidId: identifierSchema,
+              amount: amountSchema,
+            })
+            .strict()
+            .nullable(),
+          endedAt: timestampSchema,
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      event: z.literal("auction:bid"),
+      payload: z
+        .object({
+          auctionId: identifierSchema,
+          bid: z
+            .object({
+              id: identifierSchema,
+              bidderId: identifierSchema,
+              amount: amountSchema,
+              createdAt: timestampSchema,
+            })
+            .strict(),
+          currentPrice: amountSchema,
+        })
+        .strict(),
+    })
+    .strict(),
+]);
 
 export const parseSocketEvent = (message: string): SocketEvent => {
   const parsed: unknown = JSON.parse(message);
-
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !("event" in parsed) ||
-    !("payload" in parsed)
-  ) {
-    throw new Error("Invalid socket event message");
-  }
-
-  const event = parsed.event;
-
-  if (!isSocketEventName(event)) {
-    throw new Error(`Unknown socket event: ${String(event)}`);
-  }
-
-  return parsed as SocketEvent;
+  return socketEventSchema.parse(parsed) as SocketEvent;
 };

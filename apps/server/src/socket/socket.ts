@@ -132,6 +132,20 @@ export const initializeSocketInfrastructure = async () => {
   });
 };
 
+export const closeSocketServer = async () => {
+  const socketServer = io;
+
+  if (!socketServer) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    socketServer.close(() => resolve());
+  });
+
+  io = null;
+};
+
 export const getSocketServer = () => {
   if (!io) {
     throw new Error("Socket.IO server has not been initialized");

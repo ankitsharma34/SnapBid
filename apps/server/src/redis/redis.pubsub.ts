@@ -24,7 +24,9 @@ const SOCKET_EVENTS_CHANNEL = "snapbid:socket-events";
 export const initializeSocketEventSubscriber = async (
   handler: (message: string) => Promise<void>,
 ) => {
-  await subscriber.connect();
+  if (!subscriber.isOpen) {
+    await subscriber.connect();
+  }
 
   await subscriber.subscribe(SOCKET_EVENTS_CHANNEL, async (message) => {
     try {
