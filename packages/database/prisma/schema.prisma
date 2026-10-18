@@ -70,7 +70,7 @@ model Auction {
   categoryId    String?
   bids          Bid[]
 
-  winnerId     String? @unique
+  winnerId     String?
   winner       User?   @relation("AuctionWinner", fields: [winnerId], references: [id])
   winningBidId String? @unique
   winningBid   Bid?    @relation("WinningBid", fields: [winningBidId], references: [id])
@@ -80,6 +80,7 @@ model Auction {
   @@index([startTime])
   @@index([endTime])
   @@index([status, endTime])
+  @@index([winnerId])
 }
 
 model AuctionImage {
