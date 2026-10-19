@@ -1,8 +1,9 @@
 import type { Socket } from "socket.io";
+import type { Role } from "@snapbid/database";
 
 export type SocketUser = {
   userId: string;
-  role: string;
+  role: Role;
 };
 
 export type AuctionStartedPayload = {

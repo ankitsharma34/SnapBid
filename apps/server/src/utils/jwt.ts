@@ -2,10 +2,11 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { AppError } from "./app-error.js";
 import z from "zod";
+import type { Role } from "@snapbid/database";
 
 type AccessTokenPayload = {
   userId: string;
-  role: string;
+  role: Role;
 };
 
 type RefreshTokenPayload = {
