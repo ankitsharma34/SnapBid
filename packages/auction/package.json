@@ -12,6 +12,10 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@repo/typescript-config": "workspace:*",
     "@snapbid/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3"
   }
 }

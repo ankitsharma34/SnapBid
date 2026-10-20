@@ -1,8 +1,12 @@
 {
+  "extends": "@repo/typescript-config/node.json",
   "compilerOptions": {
     "outDir": "dist",
     "composite": true,
+    "incremental": true,
     "declaration": true,
-    "declarationMap": true
-  },
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
 }

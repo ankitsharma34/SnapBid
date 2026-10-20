@@ -130,9 +130,16 @@ importers:
 
   packages/auction:
     dependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       '@snapbid/database':
         specifier: workspace:*
         version: link:../database
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.15.3
 
   packages/database:
     dependencies:
@@ -142,6 +149,9 @@ importers:
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.2))(typescript@5.9.2)
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       zod:
         specifier: ^4.4.3
         version: 4.4.3
