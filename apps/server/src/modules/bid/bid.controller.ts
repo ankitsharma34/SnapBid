@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
+import type { BidInput } from "@snapbid/shared";
+import {
+  getValidatedBody,
+  getValidatedParams,
+} from "../../middlewares/validate-request.js";
 import { getBidHistoryService, postBidService } from "./bid.service.js";
-import { auctionIdParamsSchema } from "../auction/auction.schema.js";
-import { bidSchema } from "@snapbid/shared";
+import type { AuctionIdParams } from "../auction/auction.schema.js";
 
 export const postBid = async (req: Request, res: Response) => {
-  const { id } = auctionIdParamsSchema.parse(req.params);
-  const { amount } = bidSchema.parse(req.body);
+  const { id } = getValidatedParams<AuctionIdParams>(req);
+  const { amount } = getValidatedBody<BidInput>(req);
 
   const bidderId = req.user!.userId;
 
@@ -28,7 +32,7 @@ export const postBid = async (req: Request, res: Response) => {
 };
 
 export const getBidHistory = async (req: Request, res: Response) => {
-  const { id } = auctionIdParamsSchema.parse(req.params);
+  const { id } = getValidatedParams<AuctionIdParams>(req);
 
   const bidHistory = await getBidHistoryService({
     auctionId: id,

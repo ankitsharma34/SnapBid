@@ -1,5 +1,6 @@
-import { loginSchema, registerSchema } from "@snapbid/shared";
+import type { loginDto, registerDto } from "@snapbid/shared";
 import { Request, Response } from "express";
+import { getValidatedBody } from "../../middlewares/validate-request.js";
 import {
   loginUserService,
   registerUserService,
@@ -15,8 +16,7 @@ const cookieOptions = {
   sameSite: "none" as const,
 };
 export const postRegisterHandler = async (req: Request, res: Response) => {
-  // 1. Validate the request body using Zod schema
-  const input = registerSchema.parse(req.body);
+  const input = getValidatedBody<registerDto>(req);
   const user = await registerUserService(input);
 
   // 2. Generate access and refresh tokens
@@ -47,8 +47,7 @@ export const postRegisterHandler = async (req: Request, res: Response) => {
 };
 
 export const postLoginHandler = async (req: Request, res: Response) => {
-  // 1. Validate the request body using Zod schema
-  const input = loginSchema.parse(req.body);
+  const input = getValidatedBody<loginDto>(req);
   const user = await loginUserService(input);
 
   // 2. Generate access and refresh tokens

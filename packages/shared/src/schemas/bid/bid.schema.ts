@@ -9,3 +9,5 @@ export const bidSchema = z.object({
       message: "Bid amount must be positive",
     }),
 });
+
+export type BidInput = z.infer<typeof bidSchema>;

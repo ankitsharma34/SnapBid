@@ -1,4 +1,9 @@
 import { Request, Response } from "express";
+import type { CreateAuctionInput } from "@snapbid/shared";
+import {
+  getValidatedBody,
+  getValidatedParams,
+} from "../../middlewares/validate-request.js";
 import {
   cancelAuctionService,
   createAuctionService,
@@ -6,8 +11,7 @@ import {
   getAuctionByIdService,
   getAuctionsService,
 } from "./auction.service.js";
-import { auctionIdParamsSchema } from "./auction.schema.js";
-import { createAuctionSchema } from "@snapbid/shared";
+import type { AuctionIdParams } from "./auction.schema.js";
 
 export const getAuctions = async (_req: Request, res: Response) => {
   const auctions = await getAuctionsService();
@@ -20,7 +24,7 @@ export const getAuctions = async (_req: Request, res: Response) => {
 };
 
 export const getAuctionById = async (req: Request, res: Response) => {
-  const { id } = auctionIdParamsSchema.parse(req.params);
+  const { id } = getValidatedParams<AuctionIdParams>(req);
 
   const auction = await getAuctionByIdService(id);
 
@@ -32,7 +36,7 @@ export const getAuctionById = async (req: Request, res: Response) => {
 };
 
 export const postAuction = async (req: Request, res: Response) => {
-  const inputData = createAuctionSchema.parse(req.body);
+  const inputData = getValidatedBody<CreateAuctionInput>(req);
   const sellerId = req.user!.userId;
   const auctionId = await createAuctionService({ inputData, sellerId });
 
@@ -44,8 +48,8 @@ export const postAuction = async (req: Request, res: Response) => {
 };
 
 export const editAuction = async (req: Request, res: Response) => {
-  const { id } = auctionIdParamsSchema.parse(req.params);
-  const inputData = createAuctionSchema.parse(req.body);
+  const { id } = getValidatedParams<AuctionIdParams>(req);
+  const inputData = getValidatedBody<CreateAuctionInput>(req);
   const sellerId = req.user!.userId;
 
   await editAuctionService({ auctionId: id, sellerId, inputData });
@@ -58,7 +62,7 @@ export const editAuction = async (req: Request, res: Response) => {
 };
 
 export const cancelAuction = async (req: Request, res: Response) => {
-  const { id } = auctionIdParamsSchema.parse(req.params);
+  const { id } = getValidatedParams<AuctionIdParams>(req);
   const sellerId = req.user!.userId;
   await cancelAuctionService({ auctionId: id, sellerId });
 
