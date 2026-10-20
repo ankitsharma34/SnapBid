@@ -20,6 +20,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@snapbid/auction':
+        specifier: workspace:^
+        version: link:../../packages/auction
       '@snapbid/database':
         specifier: workspace:^
         version: link:../../packages/database

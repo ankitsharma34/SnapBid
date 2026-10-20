@@ -21,7 +21,7 @@ app.use("/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/auctions", auctionRouter);
 
-app.use(errorMiddleware);
 app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 export default app;

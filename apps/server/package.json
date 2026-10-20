@@ -26,6 +26,7 @@
     "tsx": "^4.23.5"
   },
   "dependencies": {
+    "@snapbid/auction": "workspace:^",
     "@snapbid/database": "workspace:^",
     "@snapbid/shared": "workspace:*",
     "argon2": "^0.45.1",
