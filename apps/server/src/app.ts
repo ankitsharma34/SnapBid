@@ -9,8 +9,8 @@ import auctionRouter from "./modules/auction/auction.route.js";
 const app = express();
 
 // middlewares
-app.use(express.json());
 app.use(loggerMiddleware);
+app.use(express.json());
 
 // routes
 app.get("/", (req: Request, res: Response) => {

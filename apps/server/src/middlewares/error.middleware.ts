@@ -11,6 +11,7 @@ type ErrorDetails = Array<{
 }>;
 
 const sendError = (
+  req: Request,
   res: Response,
   status: number,
   code: string,
@@ -19,6 +20,7 @@ const sendError = (
 ) => {
   return res.status(status).json({
     success: false,
+    requestId: req.id,
     error: {
       code,
       message,
@@ -69,6 +71,7 @@ export const errorMiddleware = (
 ) => {
   if (error instanceof ZodError) {
     return sendError(
+      req,
       res,
       400,
       "VALIDATION_ERROR",
@@ -81,11 +84,12 @@ export const errorMiddleware = (
   }
 
   if (error instanceof AppError) {
-    return sendError(res, error.statusCode, error.code, error.message);
+    return sendError(req, res, error.statusCode, error.code, error.message);
   }
 
   if (error instanceof AuctionError) {
     return sendError(
+      req,
       res,
       auctionErrorStatus[error.code],
       error.code,
@@ -98,6 +102,7 @@ export const errorMiddleware = (
 
     if (mappedError) {
       return sendError(
+        req,
         res,
         mappedError.status,
         mappedError.code,
@@ -108,6 +113,7 @@ export const errorMiddleware = (
 
   if (error instanceof Prisma.PrismaClientValidationError) {
     return sendError(
+      req,
       res,
       400,
       "INVALID_DATABASE_INPUT",
@@ -118,11 +124,18 @@ export const errorMiddleware = (
   req.log.error(
     {
       err: error,
+      requestId: req.id,
       method: req.method,
       path: req.originalUrl,
     },
     "Unhandled request error",
   );
 
-  return sendError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
+  return sendError(
+    req,
+    res,
+    500,
+    "INTERNAL_SERVER_ERROR",
+    "Internal server error",
+  );
 };
