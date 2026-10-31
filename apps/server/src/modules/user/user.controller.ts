@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type {
   SellerAuctionHistoryQuery,
   UpdateUserProfileInput,
+  UserBidHistoryQuery,
 } from "@snapbid/shared";
 import {
   getValidatedBody,
@@ -10,6 +11,7 @@ import {
 import {
   getCurrentUserProfileService,
   getSellerAuctionHistoryService,
+  getUserBidHistoryService,
   updateCurrentUserProfileService,
 } from "./user.service.js";
 
@@ -45,6 +47,18 @@ export const getSellerAuctionHistory = async (req: Request, res: Response) => {
     success: true,
     message: "Seller auction history fetched successfully",
     data: result.auctions,
+    pagination: result.pagination,
+  });
+};
+
+export const getUserBidHistory = async (req: Request, res: Response) => {
+  const query = getValidatedQuery<UserBidHistoryQuery>(req);
+  const result = await getUserBidHistoryService(req.user!.userId, query);
+
+  return res.status(200).json({
+    success: true,
+    message: "User bid history fetched successfully",
+    data: result.bids,
     pagination: result.pagination,
   });
 };

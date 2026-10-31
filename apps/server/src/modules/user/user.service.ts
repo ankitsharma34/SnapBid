@@ -2,10 +2,12 @@ import { AppError } from "../../utils/app-error.js";
 import type {
   SellerAuctionHistoryQuery,
   UpdateUserProfileInput,
+  UserBidHistoryQuery,
 } from "@snapbid/shared";
 import {
   findSellerAuctions,
   findPublicUserProfileById,
+  findUserBids,
   updateUserProfile,
 } from "./user.repository.js";
 
@@ -51,6 +53,36 @@ export const getSellerAuctionHistoryService = async (
       limit: query.limit,
       hasMore,
       nextCursor: hasMore ? (auctions.at(-1)?.id ?? null) : null,
+    },
+  };
+};
+
+export const getUserBidHistoryService = async (
+  userId: string,
+  query: UserBidHistoryQuery,
+) => {
+  const rows = await findUserBids({ userId, query });
+  const hasMore = rows.length > query.limit;
+  const bids = hasMore ? rows.slice(0, query.limit) : rows;
+
+  return {
+    bids: bids.map((bid) => ({
+      id: bid.id,
+      amount: bid.amount.toString(),
+      createdAt: bid.createdAt,
+      auction: {
+        id: bid.auction.id,
+        title: bid.auction.title,
+        status: bid.auction.status,
+        currentPrice: bid.auction.currentPrice.toString(),
+        endTime: bid.auction.endTime,
+        thumbnailUrl: bid.auction.auctionImages[0]?.url ?? null,
+      },
+    })),
+    pagination: {
+      limit: query.limit,
+      hasMore,
+      nextCursor: hasMore ? (bids.at(-1)?.id ?? null) : null,
     },
   };
 };

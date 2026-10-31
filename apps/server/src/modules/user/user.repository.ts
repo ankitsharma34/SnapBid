@@ -2,6 +2,7 @@ import { prisma } from "@snapbid/database";
 import type {
   SellerAuctionHistoryQuery,
   UpdateUserProfileInput,
+  UserBidHistoryQuery,
 } from "@snapbid/shared";
 
 const publicProfileSelect = {
@@ -61,6 +62,42 @@ export const findSellerAuctions = ({
         select: { url: true },
         orderBy: { position: "asc" },
         take: 1,
+      },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(query.cursor !== undefined
+      ? { cursor: { id: query.cursor }, skip: 1 }
+      : {}),
+    take: query.limit + 1,
+  });
+};
+
+export const findUserBids = ({
+  userId,
+  query,
+}: {
+  userId: string;
+  query: UserBidHistoryQuery;
+}) => {
+  return prisma.bid.findMany({
+    where: { bidderId: userId },
+    select: {
+      id: true,
+      amount: true,
+      createdAt: true,
+      auction: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          currentPrice: true,
+          endTime: true,
+          auctionImages: {
+            select: { url: true },
+            orderBy: { position: "asc" },
+            take: 1,
+          },
+        },
       },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
