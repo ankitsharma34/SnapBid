@@ -1,5 +1,8 @@
 import { prisma } from "@snapbid/database";
-import type { UpdateUserProfileInput } from "@snapbid/shared";
+import type {
+  SellerAuctionHistoryQuery,
+  UpdateUserProfileInput,
+} from "@snapbid/shared";
 
 const publicProfileSelect = {
   id: true,
@@ -29,5 +32,41 @@ export const updateUserProfile = (
       ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
     },
     select: publicProfileSelect,
+  });
+};
+
+export const findSellerAuctions = ({
+  userId,
+  query,
+}: {
+  userId: string;
+  query: SellerAuctionHistoryQuery;
+}) => {
+  return prisma.auction.findMany({
+    where: {
+      sellerId: userId,
+      ...(query.status !== undefined ? { status: query.status } : {}),
+    },
+    select: {
+      id: true,
+      title: true,
+      startingPrice: true,
+      currentPrice: true,
+      bidIncrement: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+      createdAt: true,
+      auctionImages: {
+        select: { url: true },
+        orderBy: { position: "asc" },
+        take: 1,
+      },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(query.cursor !== undefined
+      ? { cursor: { id: query.cursor }, skip: 1 }
+      : {}),
+    take: query.limit + 1,
   });
 };

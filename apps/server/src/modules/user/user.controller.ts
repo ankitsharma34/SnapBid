@@ -1,8 +1,15 @@
 import type { Request, Response } from "express";
-import type { UpdateUserProfileInput } from "@snapbid/shared";
-import { getValidatedBody } from "../../middlewares/validate-request.js";
+import type {
+  SellerAuctionHistoryQuery,
+  UpdateUserProfileInput,
+} from "@snapbid/shared";
+import {
+  getValidatedBody,
+  getValidatedQuery,
+} from "../../middlewares/validate-request.js";
 import {
   getCurrentUserProfileService,
+  getSellerAuctionHistoryService,
   updateCurrentUserProfileService,
 } from "./user.service.js";
 
@@ -27,5 +34,17 @@ export const patchCurrentUserProfile = async (req: Request, res: Response) => {
     success: true,
     message: "User profile updated successfully",
     data: profile,
+  });
+};
+
+export const getSellerAuctionHistory = async (req: Request, res: Response) => {
+  const query = getValidatedQuery<SellerAuctionHistoryQuery>(req);
+  const result = await getSellerAuctionHistoryService(req.user!.userId, query);
+
+  return res.status(200).json({
+    success: true,
+    message: "Seller auction history fetched successfully",
+    data: result.auctions,
+    pagination: result.pagination,
   });
 };
