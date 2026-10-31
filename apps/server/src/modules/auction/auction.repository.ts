@@ -164,12 +164,35 @@ export const createAuction = async (
 
 export const updateAuction = async ({
   auctionId,
+  sellerId,
   input,
 }: {
   auctionId: string;
+  sellerId: string;
   input: UpdateAuctionRepositoryInput;
 }) => {
   return prisma.$transaction(async (tx) => {
+    const [lockedAuction] = await tx.$queryRaw<
+      Array<{ sellerId: string; status: AuctionStatus }>
+    >(Prisma.sql`
+      SELECT "sellerId", "status"
+      FROM "Auction"
+      WHERE "id" = ${auctionId}
+      FOR UPDATE
+    `);
+
+    if (!lockedAuction) {
+      return { outcome: "NOT_FOUND" as const };
+    }
+
+    if (lockedAuction.sellerId !== sellerId) {
+      return { outcome: "NOT_OWNER" as const };
+    }
+
+    if (lockedAuction.status !== "SCHEDULED") {
+      return { outcome: "INVALID_STATUS" as const };
+    }
+
     const auction = await tx.auction.update({
       where: {
         id: auctionId,
@@ -203,20 +226,44 @@ export const updateAuction = async ({
       });
     }
 
-    return auction;
+    return { outcome: "UPDATED" as const, auction };
   });
 };
 
-export const updateAuctionStatus = async (
-  auctionId: string,
-  status: AuctionStatus,
-) => {
-  return prisma.auction.update({
-    where: {
-      id: auctionId,
-    },
-    data: {
-      status: status,
-    },
+export const cancelScheduledAuction = async ({
+  auctionId,
+  sellerId,
+}: {
+  auctionId: string;
+  sellerId: string;
+}) => {
+  return prisma.$transaction(async (tx) => {
+    const [lockedAuction] = await tx.$queryRaw<
+      Array<{ sellerId: string; status: AuctionStatus }>
+    >(Prisma.sql`
+      SELECT "sellerId", "status"
+      FROM "Auction"
+      WHERE "id" = ${auctionId}
+      FOR UPDATE
+    `);
+
+    if (!lockedAuction) {
+      return { outcome: "NOT_FOUND" as const };
+    }
+
+    if (lockedAuction.sellerId !== sellerId) {
+      return { outcome: "NOT_OWNER" as const };
+    }
+
+    if (lockedAuction.status !== "SCHEDULED") {
+      return { outcome: "INVALID_STATUS" as const };
+    }
+
+    await tx.auction.update({
+      where: { id: auctionId },
+      data: { status: "CANCELLED" },
+    });
+
+    return { outcome: "CANCELLED" as const };
   });
 };
