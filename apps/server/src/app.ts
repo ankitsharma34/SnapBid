@@ -5,6 +5,7 @@ import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import healthRouter from "./modules/health/health.route.js";
 import authRouter from "./modules/auth/auth.route.js";
 import auctionRouter from "./modules/auction/auction.route.js";
+import userRouter from "./modules/user/user.route.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/auctions", auctionRouter);
+app.use("/api/users", userRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
