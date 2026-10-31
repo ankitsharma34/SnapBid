@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "node:crypto";
 import { env } from "../config/env.js";
 import { AppError } from "./app-error.js";
 import z from "zod";
@@ -23,6 +24,7 @@ export const generateAccessToken = (payload: AccessTokenPayload) => {
 export const generateRefreshToken = (payload: RefreshTokenPayload) => {
   const refreshToken = jwt.sign(payload, env.REFRESH_TOKEN_SECRET, {
     expiresIn: "7d",
+    jwtid: randomUUID(),
   });
   return refreshToken;
 };
@@ -32,6 +34,10 @@ const accessTokenPayloadSchema = z.object({
   role: z.enum(["USER", "ADMIN"]),
 });
 
+const refreshTokenPayloadSchema = z.object({
+  userId: z.string().min(1),
+});
+
 export const verifyAccessToken = (token: string) => {
   try {
     const payload = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
@@ -39,5 +45,18 @@ export const verifyAccessToken = (token: string) => {
     return accessTokenPayloadSchema.parse(payload);
   } catch {
     throw new AppError("Invalid or expired access token", 401);
+  }
+};
+
+export const verifyRefreshToken = (token: string) => {
+  try {
+    const payload = jwt.verify(token, env.REFRESH_TOKEN_SECRET);
+    return refreshTokenPayloadSchema.parse(payload);
+  } catch {
+    throw new AppError(
+      "Invalid or expired refresh token",
+      401,
+      "INVALID_REFRESH_TOKEN",
+    );
   }
 };
