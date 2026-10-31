@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import type { CreateAuctionInput } from "@snapbid/shared";
+import type { AuctionListQuery, CreateAuctionInput } from "@snapbid/shared";
 import {
   getValidatedBody,
   getValidatedParams,
+  getValidatedQuery,
 } from "../../middlewares/validate-request.js";
 import {
   cancelAuctionService,
@@ -13,13 +14,15 @@ import {
 } from "./auction.service.js";
 import type { AuctionIdParams } from "./auction.schema.js";
 
-export const getAuctions = async (_req: Request, res: Response) => {
-  const auctions = await getAuctionsService();
+export const getAuctions = async (req: Request, res: Response) => {
+  const query = getValidatedQuery<AuctionListQuery>(req);
+  const result = await getAuctionsService(query);
 
   return res.status(200).json({
     success: true,
     message: "Auctions fetched successfully",
-    data: auctions,
+    data: result.auctions,
+    pagination: result.pagination,
   });
 };
 

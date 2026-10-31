@@ -9,17 +9,28 @@ import { AppError } from "../../utils/app-error.js";
 import { toAuctionResponse, toAuctionsListResponse } from "./auction.mapper.js";
 import {
   createAuction,
-  findAllAuctions,
+  findAuctions,
   findAuctionById,
   findCategoryIdBySlug,
   updateAuction,
   updateAuctionStatus,
 } from "./auction.repository.js";
-import { CreateAuctionInput } from "@snapbid/shared";
+import { AuctionListQuery, CreateAuctionInput } from "@snapbid/shared";
 
-export const getAuctionsService = async () => {
-  const auctions = await findAllAuctions();
-  return toAuctionsListResponse(auctions);
+export const getAuctionsService = async (query: AuctionListQuery) => {
+  const result = await findAuctions(query);
+
+  return {
+    auctions: toAuctionsListResponse(result.auctions),
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / query.limit),
+      hasNextPage: query.page * query.limit < result.total,
+      hasPreviousPage: query.page > 1,
+    },
+  };
 };
 
 export const getAuctionByIdService = async (id: string) => {

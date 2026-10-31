@@ -80,6 +80,11 @@ model Auction {
   @@index([startTime])
   @@index([endTime])
   @@index([status, endTime])
+  @@index([createdAt])
+  @@index([currentPrice])
+  @@index([status, currentPrice])
+  @@index([status, startTime])
+  @@index([categoryId, status, createdAt])
   @@index([winnerId])
 }
 

@@ -1,37 +1,88 @@
 import { prisma } from "@snapbid/database";
 import { AuctionStatus, Prisma } from "@snapbid/database";
+import type { AuctionListQuery } from "@snapbid/shared";
 import {
   CreateAuctionRepositoryInput,
   UpdateAuctionRepositoryInput,
 } from "./auction.types.js";
 
-export const findAllAuctions = async () => {
-  return prisma.auction.findMany({
-    select: {
-      id: true,
-      title: true,
-      currentPrice: true,
-      bidIncrement: true,
-      startTime: true,
-      endTime: true,
-      status: true,
+const auctionListOrderBy = (
+  sort: AuctionListQuery["sort"],
+): Prisma.AuctionOrderByWithRelationInput[] => {
+  switch (sort) {
+    case "endingSoon":
+      return [{ endTime: "asc" }, { id: "asc" }];
+    case "startingSoon":
+      return [{ startTime: "asc" }, { id: "asc" }];
+    case "priceAsc":
+      return [{ currentPrice: "asc" }, { id: "asc" }];
+    case "priceDesc":
+      return [{ currentPrice: "desc" }, { id: "desc" }];
+    case "newest":
+      return [{ createdAt: "desc" }, { id: "desc" }];
+  }
+};
 
-      auctionImages: {
-        select: {
-          url: true,
+export const findAuctions = async (query: AuctionListQuery) => {
+  const where: Prisma.AuctionWhereInput = {
+    ...(query.category !== undefined
+      ? { category: { slug: query.category } }
+      : {}),
+    ...(query.status !== undefined ? { status: query.status } : {}),
+    ...(query.minPrice !== undefined || query.maxPrice !== undefined
+      ? {
+          currentPrice: {
+            ...(query.minPrice !== undefined
+              ? { gte: new Prisma.Decimal(query.minPrice) }
+              : {}),
+            ...(query.maxPrice !== undefined
+              ? { lte: new Prisma.Decimal(query.maxPrice) }
+              : {}),
+          },
+        }
+      : {}),
+  };
+
+  const [auctions, total] = await prisma.$transaction([
+    prisma.auction.findMany({
+      where,
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+      orderBy: auctionListOrderBy(query.sort),
+      select: {
+        id: true,
+        title: true,
+        currentPrice: true,
+        bidIncrement: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
         },
-        orderBy: {
-          position: "asc",
+        auctionImages: {
+          select: {
+            url: true,
+          },
+          orderBy: {
+            position: "asc",
+          },
+          take: 1,
         },
-        take: 1,
       },
-    },
-  });
+    }),
+    prisma.auction.count({ where }),
+  ]);
+
+  return { auctions, total };
 };
 
 export type AuctionListQueryResult = Awaited<
-  ReturnType<typeof findAllAuctions>
->;
+  ReturnType<typeof findAuctions>
+>["auctions"];
 
 export const findAuctionById = async (id: string) => {
   return prisma.auction.findUnique({

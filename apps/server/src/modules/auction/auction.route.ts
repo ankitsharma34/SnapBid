@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/authenticate.js";
-import { createAuctionSchema } from "@snapbid/shared";
+import { auctionListQuerySchema, createAuctionSchema } from "@snapbid/shared";
 import {
   validateBody,
   validateParams,
+  validateQuery,
 } from "../../middlewares/validate-request.js";
 import {
   getAuctions,
@@ -18,7 +19,12 @@ import { auctionIdParamsSchema } from "./auction.schema.js";
 
 const router = Router();
 
-router.get("/", authenticate, getAuctions);
+router.get(
+  "/",
+  authenticate,
+  validateQuery(auctionListQuerySchema),
+  getAuctions,
+);
 router.post("/", authenticate, validateBody(createAuctionSchema), postAuction);
 router.get(
   "/:id",

@@ -12,6 +12,7 @@ export const toAuctionsListResponse = (auctions: AuctionListQueryResult) => {
     startTime: auction.startTime,
     endTime: auction.endTime,
     status: auction.status,
+    category: auction.category,
     thumbnailUrl: auction.auctionImages[0]?.url ?? null,
   }));
 };
