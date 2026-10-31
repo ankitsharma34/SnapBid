@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { getValidatedBody } from "../../middlewares/validate-request.js";
 import {
   loginUserService,
+  logoutUserService,
   refreshAccessTokenService,
   registerUserService,
   saveRefreshTokenService,
@@ -125,5 +126,17 @@ export const postRefreshHandler = async (req: Request, res: Response) => {
     success: true,
     message: "Access token refreshed successfully",
     accessToken: tokens.accessToken,
+  });
+};
+
+export const postLogoutHandler = async (req: Request, res: Response) => {
+  const refreshToken = getCookie(req, "refresh_token");
+
+  await logoutUserService(refreshToken);
+  res.clearCookie("refresh_token", cookieOptions);
+
+  return res.status(200).json({
+    success: true,
+    message: "User logged out successfully",
   });
 };

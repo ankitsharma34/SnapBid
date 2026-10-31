@@ -4,6 +4,7 @@ import {
   createUser,
   findUserByEmail,
   findUserByUsername,
+  revokeRefreshToken,
   rotateRefreshToken,
   saveRefreshToken,
 } from "./auth.repository.js";
@@ -89,4 +90,12 @@ export const refreshAccessTokenService = async (refreshToken: string) => {
     }),
     refreshToken: nextRefreshToken,
   };
+};
+
+export const logoutUserService = async (refreshToken: string | null) => {
+  if (!refreshToken) {
+    return;
+  }
+
+  await revokeRefreshToken(hashToken(refreshToken));
 };
