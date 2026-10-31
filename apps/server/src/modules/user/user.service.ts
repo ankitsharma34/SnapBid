@@ -3,11 +3,13 @@ import type {
   SellerAuctionHistoryQuery,
   UpdateUserProfileInput,
   UserBidHistoryQuery,
+  UserWinsQuery,
 } from "@snapbid/shared";
 import {
   findSellerAuctions,
   findPublicUserProfileById,
   findUserBids,
+  findUserWonAuctions,
   updateUserProfile,
 } from "./user.repository.js";
 
@@ -83,6 +85,38 @@ export const getUserBidHistoryService = async (
       limit: query.limit,
       hasMore,
       nextCursor: hasMore ? (bids.at(-1)?.id ?? null) : null,
+    },
+  };
+};
+
+export const getUserWinsService = async (
+  userId: string,
+  query: UserWinsQuery,
+) => {
+  const rows = await findUserWonAuctions({ userId, query });
+  const hasMore = rows.length > query.limit;
+  const auctions = hasMore ? rows.slice(0, query.limit) : rows;
+
+  return {
+    auctions: auctions.map((auction) => ({
+      id: auction.id,
+      title: auction.title,
+      startTime: auction.startTime,
+      endTime: auction.endTime,
+      status: auction.status,
+      thumbnailUrl: auction.auctionImages[0]?.url ?? null,
+      winningBid: auction.winningBid
+        ? {
+            id: auction.winningBid.id,
+            amount: auction.winningBid.amount.toString(),
+            createdAt: auction.winningBid.createdAt,
+          }
+        : null,
+    })),
+    pagination: {
+      limit: query.limit,
+      hasMore,
+      nextCursor: hasMore ? (auctions.at(-1)?.id ?? null) : null,
     },
   };
 };

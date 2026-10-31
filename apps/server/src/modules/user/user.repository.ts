@@ -3,6 +3,7 @@ import type {
   SellerAuctionHistoryQuery,
   UpdateUserProfileInput,
   UserBidHistoryQuery,
+  UserWinsQuery,
 } from "@snapbid/shared";
 
 const publicProfileSelect = {
@@ -101,6 +102,46 @@ export const findUserBids = ({
       },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...(query.cursor !== undefined
+      ? { cursor: { id: query.cursor }, skip: 1 }
+      : {}),
+    take: query.limit + 1,
+  });
+};
+
+export const findUserWonAuctions = ({
+  userId,
+  query,
+}: {
+  userId: string;
+  query: UserWinsQuery;
+}) => {
+  return prisma.auction.findMany({
+    where: {
+      winnerId: userId,
+      winningBidId: { not: null },
+      status: "ENDED",
+    },
+    select: {
+      id: true,
+      title: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+      winningBid: {
+        select: {
+          id: true,
+          amount: true,
+          createdAt: true,
+        },
+      },
+      auctionImages: {
+        select: { url: true },
+        orderBy: { position: "asc" },
+        take: 1,
+      },
+    },
+    orderBy: [{ endTime: "desc" }, { id: "desc" }],
     ...(query.cursor !== undefined
       ? { cursor: { id: query.cursor }, skip: 1 }
       : {}),

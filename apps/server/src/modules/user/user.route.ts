@@ -3,6 +3,7 @@ import {
   sellerAuctionHistoryQuerySchema,
   updateUserProfileSchema,
   userBidHistoryQuerySchema,
+  userWinsQuerySchema,
 } from "@snapbid/shared";
 import { authenticate } from "../../middlewares/authenticate.js";
 import {
@@ -13,6 +14,7 @@ import {
   getCurrentUserProfile,
   getSellerAuctionHistory,
   getUserBidHistory,
+  getUserWins,
   patchCurrentUserProfile,
 } from "./user.controller.js";
 
@@ -30,6 +32,12 @@ router.get(
   authenticate,
   validateQuery(userBidHistoryQuerySchema),
   getUserBidHistory,
+);
+router.get(
+  "/me/wins",
+  authenticate,
+  validateQuery(userWinsQuerySchema),
+  getUserWins,
 );
 router.patch(
   "/me",
