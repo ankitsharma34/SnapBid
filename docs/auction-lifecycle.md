@@ -17,10 +17,12 @@ stateDiagram-v2
     [*] --> SCHEDULED: Auction Created
 
     SCHEDULED --> LIVE: START_AUCTION Job executed
+    SCHEDULED --> CANCELLED: Seller cancels auction
 
     LIVE --> ENDED: END_AUCTION Job executed
 
     ENDED --> [*]
+    CANCELLED --> [*]
 ```
 
 ## Lifecycle Execution
@@ -33,6 +35,16 @@ When an auction is created via the Server API, two delayed jobs are placed into 
 
 1. `START_AUCTION`: Delayed to execute exactly at `startTime`.
 2. `END_AUCTION`: Delayed to execute exactly at `endTime`.
+
+While an auction remains `SCHEDULED`, its seller may edit its configuration or
+cancel it through the existing HTTP endpoints. Other authenticated users cannot
+modify it. Editing replaces the delayed lifecycle jobs with jobs based on the
+new schedule; cancellation removes the pending jobs.
+
+Ownership and status checks are performed inside the same transaction as the
+mutation while holding a row-level lock. This prevents an edit or cancellation
+from racing with the worker's transition from `SCHEDULED` to `LIVE`. Once the
+auction is `LIVE`, `ENDED`, or `CANCELLED`, seller mutations are rejected.
 
 ### 2. START_AUCTION Job
 

@@ -26,6 +26,9 @@ The SnapBid backend utilizes a multi-layered architecture within `apps/server` t
 - The abstraction layer over the Prisma ORM.
 - Contains raw database queries, transactions, and locking mechanisms.
 - Ensures data integrity (e.g., the `SELECT ... FOR UPDATE` transaction in `bid.repository.ts`).
+- Enforces mutation invariants at the write boundary. Auction edit and cancel
+  transactions lock the auction row and verify both seller ownership and
+  `SCHEDULED` status before changing data.
 - Returns clean domain objects to the Services.
 
 ### 4. Middleware (`apps/server/src/middlewares/`)

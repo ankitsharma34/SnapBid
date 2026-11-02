@@ -52,7 +52,7 @@ return prisma.$transaction(
 );
 ```
 
-### How `FOR UPDATE` works:
+### How `FOR UPDATE` works
 
 1. When Request A executes `SELECT ... FOR UPDATE`, PostgreSQL locks the specific Auction row.
 2. Request A proceeds to read the `currentPrice`, validate the bid, insert the new bid, and update the Auction row.
@@ -64,3 +64,18 @@ return prisma.$transaction(
 ### Isolation Level
 
 The transaction uses `ReadCommitted` isolation. Because the `FOR UPDATE` lock guarantees exclusive write access to the row during the transaction, `Serializable` isolation is not required for this specific operation, allowing higher database throughput while still ensuring strict financial integrity.
+
+## Seller Mutations and Lifecycle Jobs
+
+Auction edits and cancellations use the same row-locking principle. The
+repository locks the target auction with `SELECT ... FOR UPDATE`, then verifies
+both conditions before writing:
+
+1. The authenticated user matches the auction's `sellerId`.
+2. The auction status is still `SCHEDULED`.
+
+The ownership check, lifecycle check, and mutation occur in one transaction.
+This closes the time-of-check/time-of-use gap that would otherwise allow the
+worker to start an auction after the service checked its status but before the
+server applied an edit or cancellation. A non-owner receives `403 Forbidden`;
+a lifecycle conflict receives `409 Conflict`.
