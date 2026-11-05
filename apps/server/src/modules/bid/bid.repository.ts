@@ -1,5 +1,6 @@
 import { Prisma } from "@snapbid/database";
 import { prisma } from "@snapbid/database";
+import { calculateMinimumBid, meetsMinimumBid } from "@snapbid/auction";
 import { AppError } from "../../utils/app-error.js";
 
 export const placeBid = async ({
@@ -57,15 +58,15 @@ export const placeBid = async ({
         throw new AppError("Seller cannot bid on their own auction", 403);
       }
 
-      const minimumBid = auction.currentPrice.add(auction.bidIncrement);
+      const minimumBid = calculateMinimumBid(
+        auction.currentPrice.toString(),
+        auction.bidIncrement.toString(),
+      );
 
       const amount = new Prisma.Decimal(inputAmount);
 
-      if (amount.lt(minimumBid)) {
-        throw new AppError(
-          `Bid must be at least ${minimumBid.toString()}`,
-          400,
-        );
+      if (!meetsMinimumBid(inputAmount, minimumBid)) {
+        throw new AppError(`Bid must be at least ${minimumBid}`, 400);
       }
 
       const bid = await tx.bid.create({
