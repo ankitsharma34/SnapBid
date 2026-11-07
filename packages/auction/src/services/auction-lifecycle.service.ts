@@ -4,6 +4,10 @@ import {
   findAuctionForLifecycle,
   markAuctionAsLive,
 } from "../repositories/auction-lifecycle.repository.js";
+import {
+  endAuctionValidationError,
+  startAuctionValidationError,
+} from "./auction-lifecycle.rules.js";
 
 export const startAuctionService = async (auctionId: string) => {
   const auction = await findAuctionForLifecycle(auctionId);
@@ -22,25 +26,24 @@ export const startAuctionService = async (auctionId: string) => {
     };
   }
 
-  if (auction.status !== "SCHEDULED") {
+  const validationError = startAuctionValidationError(auction, now);
+
+  if (validationError === "INVALID_AUCTION_STATE") {
     throw new AuctionError(
       `Auction cannot be started from ${auction.status} state`,
-      "INVALID_AUCTION_STATE",
+      validationError,
     );
   }
 
-  if (auction.startTime > now) {
+  if (validationError === "AUCTION_NOT_STARTED") {
     throw new AuctionError(
       "Auction start time has not been reached",
-      "AUCTION_NOT_STARTED",
+      validationError,
     );
   }
 
-  if (auction.endTime <= now) {
-    throw new AuctionError(
-      "Auction has already ended",
-      "AUCTION_ALREADY_ENDED",
-    );
+  if (validationError === "AUCTION_ALREADY_ENDED") {
+    throw new AuctionError("Auction has already ended", validationError);
   }
 
   const started = await markAuctionAsLive(auctionId, now);
@@ -76,17 +79,19 @@ export const endAuctionService = async (auctionId: string) => {
     // Auction is already ended, no action needed
   }
 
-  if (auction.status !== "LIVE") {
+  const validationError = endAuctionValidationError(auction, now);
+
+  if (validationError === "INVALID_AUCTION_STATE") {
     throw new AuctionError(
       `Auction cannot be ended from ${auction.status} state`,
-      "INVALID_AUCTION_STATE",
+      validationError,
     );
   }
 
-  if (auction.endTime > now) {
+  if (validationError === "INVALID_AUCTION_TIME") {
     throw new AuctionError(
       "Auction end time has not been reached",
-      "INVALID_AUCTION_TIME",
+      validationError,
     );
   }
 
