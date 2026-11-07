@@ -5,6 +5,7 @@ import {
   getValidatedParams,
 } from "../../middlewares/validate-request.js";
 import { getBidHistoryService, postBidService } from "./bid.service.js";
+import { toBidResponse } from "./bid.mapper.js";
 import type { AuctionIdParams } from "../auction/auction.schema.js";
 
 export const postBid = async (req: Request, res: Response) => {
@@ -22,12 +23,7 @@ export const postBid = async (req: Request, res: Response) => {
   return res.status(201).json({
     success: true,
     message: "Bid placed successfully",
-    data: {
-      bidId: bid.id,
-      bidderId: bid.bidderId,
-      amount: bid.amount.toString(),
-      createdAt: bid.createdAt.toISOString(),
-    },
+    data: toBidResponse(bid),
   });
 };
 
