@@ -1,4 +1,4 @@
-import {
+import type {
   AuctionListQueryResult,
   AuctionQueryResult,
 } from "./auction.repository.js";
@@ -9,8 +9,8 @@ export const toAuctionsListResponse = (auctions: AuctionListQueryResult) => {
     title: auction.title,
     currentPrice: auction.currentPrice.toString(),
     bidIncrement: auction.bidIncrement.toString(),
-    startTime: auction.startTime,
-    endTime: auction.endTime,
+    startTime: auction.startTime.toISOString(),
+    endTime: auction.endTime.toISOString(),
     status: auction.status,
     category: auction.category,
     thumbnailUrl: auction.auctionImages[0]?.url ?? null,
@@ -25,8 +25,8 @@ export const toAuctionResponse = (auction: AuctionQueryResult) => {
     startingPrice: auction.startingPrice.toString(),
     currentPrice: auction.currentPrice.toString(),
     bidIncrement: auction.bidIncrement.toString(),
-    startTime: auction.startTime,
-    endTime: auction.endTime,
+    startTime: auction.startTime.toISOString(),
+    endTime: auction.endTime.toISOString(),
     status: auction.status,
     images: auction.auctionImages.map((image) => image.url),
     category: auction.category
