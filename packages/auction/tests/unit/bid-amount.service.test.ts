@@ -48,4 +48,8 @@ describe("bid amount rules", () => {
     expect(meetsMinimumBid("0.3", minimumBid)).toBe(true);
     expect(meetsMinimumBid("0.29", minimumBid)).toBe(false);
   });
+
+  it("normalizes trailing decimal zeros in calculated prices", () => {
+    expect(calculateMinimumBid("100.00", "5.00")).toBe("105");
+  });
 });
